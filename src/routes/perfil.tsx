@@ -73,21 +73,21 @@ function ProfilePage() {
                 style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: "cover" } : undefined}
               />
 
-              <div className="flex items-end gap-4 px-6 pb-5 -mt-10">
-                <div className="grid h-20 w-20 place-items-center rounded-full border-4 border-surface-1 bg-gradient-to-br from-accent to-primary text-xl font-semibold text-primary-foreground overflow-hidden">
+              <div className="flex items-end gap-4 px-6 pb-5 -mt-12 relative z-10">
+                <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-surface-1 bg-gradient-to-br from-accent to-primary text-xl font-semibold text-primary-foreground overflow-hidden shadow-lg">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
                     initials
                   )}
                 </div>
-                <div className="flex-1 pb-1">
+                <div className="flex-1 pt-10">
                   <h1 className="text-lg font-semibold">u/{profile?.username ?? "..."}</h1>
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
                 <button
                   onClick={() => setEditing((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded-md hairline bg-surface-1 px-3 py-1.5 text-sm hover:bg-surface-2"
+                  className="inline-flex items-center gap-1.5 rounded-md hairline bg-surface-1 px-3 py-1.5 text-sm hover:bg-surface-2 self-end"
                 >
                   <Pencil className="h-3.5 w-3.5" /> {editing ? "Cancelar" : "Editar perfil"}
                 </button>
