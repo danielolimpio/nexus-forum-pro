@@ -3,6 +3,7 @@ import { Search, Plus, LogOut, User as UserIcon } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
+import logoAsset from "@/assets/logo.png.asset.json";
 import { CreatePostDialog } from "./CreatePostDialog";
 
 export function TopBar() {
@@ -19,9 +20,7 @@ export function TopBar() {
     <header className="sticky top-0 z-30 border-b border-border bg-surface-1/80 backdrop-blur">
       <div className="flex h-14 items-center gap-4 px-4 lg:px-6">
         <Link to="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-semibold">
-            G
-          </div>
+          <img src={logoAsset.url} alt="GroupeForum" className="h-8 w-8 object-contain" />
           <div className="hidden sm:flex flex-col leading-none">
             <span className="text-sm font-semibold tracking-tight">GroupeForum</span>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">.pro</span>
@@ -84,7 +83,7 @@ export function TopBar() {
           ) : (
             <Link
               to="/auth"
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+              className="rounded-md bg-gradient-to-br from-[#4A9EFF] via-[#2563EB] to-[#1E3A8A] px-4 py-1.5 text-sm font-semibold text-white shadow-md shadow-blue-500/30 hover:opacity-95 hover:shadow-blue-500/40 transition"
             >
               Entrar
             </Link>
