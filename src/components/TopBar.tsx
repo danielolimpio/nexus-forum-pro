@@ -83,7 +83,7 @@ export function TopBar() {
           ) : (
             <Link
               to="/auth"
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+              className="rounded-md bg-gradient-to-br from-[#4A9EFF] via-[#2563EB] to-[#1E3A8A] px-4 py-1.5 text-sm font-semibold text-white shadow-md shadow-blue-500/30 hover:opacity-95 hover:shadow-blue-500/40 transition"
             >
               Entrar
             </Link>
