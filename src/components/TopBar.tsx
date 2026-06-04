@@ -3,6 +3,7 @@ import { Search, Plus, LogOut, User as UserIcon } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
+import logoAsset from "@/assets/logo.png.asset.json";
 import { CreatePostDialog } from "./CreatePostDialog";
 
 export function TopBar() {
