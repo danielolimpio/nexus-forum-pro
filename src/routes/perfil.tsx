@@ -1,12 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TrendingPanel } from "@/components/TrendingPanel";
-import { Pencil, Award, MessageSquare, Hash } from "lucide-react";
+import { Pencil, Award, MessageSquare, Hash, Camera, Globe } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  uploadImage,
+  validateImage,
+  MAX_AVATAR_BYTES,
+  MAX_COVER_BYTES,
+  formatBytes,
+} from "@/lib/storage";
 
 export const Route = createFileRoute("/perfil")({
   head: () => ({ meta: [{ title: "Perfil — GroupeForum.pro" }] }),
@@ -17,9 +24,14 @@ function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
+  const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [website, setWebsite] = useState("");
   const [stats, setStats] = useState({ posts: 0, keywords: 0 });
+  const [uploading, setUploading] = useState<null | "avatar" | "cover">(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const coverInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -27,8 +39,10 @@ function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
+      setUsername(profile.username ?? "");
       setDisplayName(profile.display_name ?? "");
       setBio(profile.bio ?? "");
+      setWebsite(profile.website ?? "");
     }
   }, [profile]);
 
@@ -48,14 +62,50 @@ function ProfilePage() {
 
   const save = async () => {
     if (!user) return;
+    const cleanUsername = username
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 24);
+    if (cleanUsername.length < 3) return toast.error("Nome de usuário muito curto");
+    let cleanWebsite = website.trim();
+    if (cleanWebsite && !/^https?:\/\//i.test(cleanWebsite)) cleanWebsite = `https://${cleanWebsite}`;
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, bio })
+      .update({
+        username: cleanUsername,
+        display_name: displayName,
+        bio,
+        website: cleanWebsite || null,
+      })
       .eq("id", user.id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (error.message.includes("duplicate")) return toast.error("Nome de usuário já em uso");
+      return toast.error(error.message);
+    }
     toast.success("Perfil atualizado");
     setEditing(false);
     refreshProfile();
+  };
+
+  const handleUpload = async (kind: "avatar" | "cover", file: File) => {
+    if (!user) return;
+    const max = kind === "avatar" ? MAX_AVATAR_BYTES : MAX_COVER_BYTES;
+    const err = validateImage(file, max);
+    if (err) return toast.error(err);
+    setUploading(kind);
+    try {
+      const bucket = kind === "avatar" ? "avatars" : "covers";
+      const url = await uploadImage(bucket, user.id, file);
+      const column = kind === "avatar" ? "avatar_url" : "cover_url";
+      const { error } = await supabase.from("profiles").update({ [column]: url }).eq("id", user.id);
+      if (error) throw error;
+      toast.success(kind === "avatar" ? "Foto atualizada" : "Banner atualizado");
+      refreshProfile();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Erro no upload");
+    } finally {
+      setUploading(null);
+    }
   };
 
   const initials = (profile?.display_name || profile?.username || "?").slice(0, 2).toUpperCase();
@@ -68,22 +118,77 @@ function ProfilePage() {
         <main className="flex-1 px-4 py-6 lg:px-8">
           <div className="mx-auto max-w-3xl">
             <section className="surface-card overflow-hidden">
-              <div
-                className="relative h-44 bg-gradient-to-br from-primary/80 via-primary to-accent"
-                style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: "cover" } : undefined}
-              />
+              <div className="relative">
+                <div
+                  className="h-44 bg-gradient-to-br from-primary/80 via-primary to-accent bg-cover bg-center"
+                  style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})` } : undefined}
+                />
+                <button
+                  type="button"
+                  onClick={() => coverInput.current?.click()}
+                  className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/50 px-2.5 py-1 text-[11px] text-white backdrop-blur hover:bg-black/70"
+                  disabled={uploading === "cover"}
+                >
+                  <Camera className="h-3 w-3" />
+                  {uploading === "cover" ? "Enviando…" : "Trocar banner"}
+                </button>
+                <input
+                  ref={coverInput}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleUpload("cover", f);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
 
               <div className="flex items-end gap-4 px-6 pb-5 -mt-12 relative z-10">
-                <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-surface-1 bg-gradient-to-br from-accent to-primary text-xl font-semibold text-primary-foreground overflow-hidden shadow-lg">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    initials
-                  )}
+                <div className="relative">
+                  <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-4 border-surface-1 bg-gradient-to-br from-accent to-primary text-xl font-semibold text-primary-foreground overflow-hidden shadow-lg">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      initials
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => avatarInput.current?.click()}
+                    disabled={uploading === "avatar"}
+                    className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-surface-1 bg-primary text-primary-foreground shadow hover:opacity-90"
+                    title="Trocar foto"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </button>
+                  <input
+                    ref={avatarInput}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleUpload("avatar", f);
+                      e.target.value = "";
+                    }}
+                  />
                 </div>
                 <div className="flex-1 pt-10">
                   <h1 className="text-lg font-semibold">u/{profile?.username ?? "..."}</h1>
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  {profile?.website && !editing && (
+                    <a
+                      href={profile.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <Globe className="h-3 w-3" />
+                      {profile.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  )}
                 </div>
                 <button
                   onClick={() => setEditing((v) => !v)}
@@ -92,6 +197,10 @@ function ProfilePage() {
                   <Pencil className="h-3.5 w-3.5" /> {editing ? "Cancelar" : "Editar perfil"}
                 </button>
               </div>
+
+              <p className="px-6 pb-3 text-[11px] text-muted-foreground">
+                Foto máx {formatBytes(MAX_AVATAR_BYTES)} · Banner máx {formatBytes(MAX_COVER_BYTES)}
+              </p>
 
               <div className="grid grid-cols-3 border-t border-border">
                 {[
@@ -119,18 +228,35 @@ function ProfilePage() {
               <h2 className="mb-2 text-sm font-semibold">Sobre</h2>
               {editing ? (
                 <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-medium text-muted-foreground">Nome de usuário</label>
+                  <input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="usuario"
+                    className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
+                  />
+                  <label className="text-[11px] font-medium text-muted-foreground">Nome de exibição</label>
                   <input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Nome de exibição"
                     className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
                   />
+                  <label className="text-[11px] font-medium text-muted-foreground">Bio</label>
                   <textarea
                     rows={4}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="Conte sobre você"
                     className="resize-none rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
+                  />
+                  <label className="text-[11px] font-medium text-muted-foreground">Site / link</label>
+                  <input
+                    type="url"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://seusite.com"
+                    className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
                   />
                   <div className="flex justify-end">
                     <button
