@@ -74,6 +74,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "posts_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
@@ -144,6 +151,13 @@ export type Database = {
           post_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "replies_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "replies_parent_id_fkey"
             columns: ["parent_id"]
