@@ -88,7 +88,7 @@ export async function fetchReplies(postId: string): Promise<ReplyNode[]> {
 export async function fetchGroups() {
   const { data, error } = await supabase
     .from("groups")
-    .select("id, slug, name, category")
+    .select("id, slug, name, category, image_url")
     .order("name", { ascending: true });
   if (error) throw error;
   return data ?? [];
