@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "@/components/TopBar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { PostCard } from "@/components/PostCard";
-import { POSTS } from "@/lib/mock-data";
+import { fetchPosts } from "@/lib/forum";
 import { Flame, Clock, TrendingUp, Filter } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -15,17 +16,14 @@ export const Route = createFileRoute("/")({
         content:
           "Fórum profissional focado em texto. Discussões estruturadas, grupos por categoria e palavras-chave únicas que constroem autoridade.",
       },
-      { property: "og:title", content: "GroupeForum.pro — Fórum profissional" },
-      {
-        property: "og:description",
-        content: "Discussões estruturadas em escadinha, grupos públicos e privados, layout premium.",
-      },
     ],
   }),
   component: Home,
 });
 
 function Home() {
+  const { data: posts = [], isLoading } = useQuery({ queryKey: ["posts"], queryFn: () => fetchPosts(30) });
+
   return (
     <div className="min-h-screen">
       <TopBar />
@@ -51,11 +49,22 @@ function Home() {
               </div>
             </header>
 
-            <div className="flex flex-col gap-3">
-              {POSTS.map((p) => (
-                <PostCard key={p.id} post={p} />
-              ))}
-            </div>
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando…</p>
+            ) : posts.length === 0 ? (
+              <div className="surface-card p-8 text-center">
+                <h3 className="text-base font-semibold">Nenhuma pergunta ainda</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Seja o primeiro a abrir uma discussão e registrar uma palavra-chave única no fórum.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {posts.map((p) => (
+                  <PostCard key={p.id} post={p} />
+                ))}
+              </div>
+            )}
           </div>
         </main>
         <TrendingPanel />
