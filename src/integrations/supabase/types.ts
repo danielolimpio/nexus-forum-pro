@@ -21,6 +21,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          image_url: string | null
           name: string
           slug: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           name: string
           slug: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           slug?: string
         }
@@ -99,6 +102,7 @@ export type Database = {
           id: string
           updated_at: string
           username: string
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -109,6 +113,7 @@ export type Database = {
           id: string
           updated_at?: string
           username: string
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -119,6 +124,7 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string
+          website?: string | null
         }
         Relationships: []
       }
