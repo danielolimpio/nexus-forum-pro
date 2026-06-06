@@ -30,6 +30,7 @@ function ProfilePage() {
   const [website, setWebsite] = useState("");
   const [stats, setStats] = useState({ posts: 0, keywords: 0 });
   const [uploading, setUploading] = useState<null | "avatar" | "cover">(null);
+  const [showLimits, setShowLimits] = useState(false);
   const avatarInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
