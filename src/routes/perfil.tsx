@@ -186,7 +186,7 @@ function ProfilePage() {
                     }}
                   />
                 </div>
-                <div className="flex-1 pt-10">
+                <div className="flex-1 pt-16">
                   <h1 className="text-lg font-semibold">u/{profile?.username ?? "..."}</h1>
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
                   {profile?.website && !editing && (
