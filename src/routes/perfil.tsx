@@ -96,8 +96,8 @@ function ProfilePage() {
     try {
       const bucket = kind === "avatar" ? "avatars" : "covers";
       const url = await uploadImage(bucket, user.id, file);
-      const column = kind === "avatar" ? "avatar_url" : "cover_url";
-      const { error } = await supabase.from("profiles").update({ [column]: url }).eq("id", user.id);
+      const patch = kind === "avatar" ? { avatar_url: url } : { cover_url: url };
+      const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
       if (error) throw error;
       toast.success(kind === "avatar" ? "Foto atualizada" : "Banner atualizado");
       refreshProfile();
