@@ -92,7 +92,10 @@ function ProfilePage() {
     if (!user) return;
     const max = kind === "avatar" ? MAX_AVATAR_BYTES : MAX_COVER_BYTES;
     const err = validateImage(file, max);
-    if (err) return toast.error(err);
+    if (err) {
+      setShowLimits(false);
+      return toast.error(err);
+    }
     setUploading(kind);
     try {
       const bucket = kind === "avatar" ? "avatars" : "covers";
@@ -106,6 +109,7 @@ function ProfilePage() {
       toast.error(e instanceof Error ? e.message : "Erro no upload");
     } finally {
       setUploading(null);
+      setShowLimits(false);
     }
   };
 
@@ -126,7 +130,10 @@ function ProfilePage() {
                 />
                 <button
                   type="button"
-                  onClick={() => coverInput.current?.click()}
+                  onClick={() => {
+                    setShowLimits(true);
+                    coverInput.current?.click();
+                  }}
                   className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/50 px-2.5 py-1 text-[11px] text-white backdrop-blur hover:bg-black/70"
                   disabled={uploading === "cover"}
                 >
@@ -157,7 +164,10 @@ function ProfilePage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => avatarInput.current?.click()}
+                    onClick={() => {
+                      setShowLimits(true);
+                      avatarInput.current?.click();
+                    }}
                     disabled={uploading === "avatar"}
                     className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-surface-1 bg-primary text-primary-foreground shadow hover:opacity-90"
                     title="Trocar foto"
@@ -199,9 +209,11 @@ function ProfilePage() {
                 </button>
               </div>
 
-              <p className="px-6 pb-3 text-[11px] text-muted-foreground">
-                Foto máx {formatBytes(MAX_AVATAR_BYTES)} · Banner máx {formatBytes(MAX_COVER_BYTES)}
-              </p>
+              {(showLimits || uploading) && (
+                <p className="px-6 pb-3 text-[11px] text-muted-foreground">
+                  Foto máx {formatBytes(MAX_AVATAR_BYTES)} · Banner máx {formatBytes(MAX_COVER_BYTES)}
+                </p>
+              )}
 
               <div className="grid grid-cols-3 border-t border-border">
                 {[
