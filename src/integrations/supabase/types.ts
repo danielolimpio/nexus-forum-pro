@@ -19,6 +19,7 @@ export type Database = {
           category: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -29,6 +30,7 @@ export type Database = {
           category: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -209,7 +212,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      purge_expired_groups: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

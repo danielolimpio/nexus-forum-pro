@@ -85,13 +85,65 @@ export async function fetchReplies(postId: string): Promise<ReplyNode[]> {
   return roots;
 }
 
-export async function fetchGroups() {
+export type GroupRow = {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  image_url: string | null;
+  created_by: string | null;
+  deleted_at: string | null;
+};
+
+export async function fetchGroups(): Promise<GroupRow[]> {
   const { data, error } = await supabase
     .from("groups")
-    .select("id, slug, name, category, image_url")
+    .select("id, slug, name, category, image_url, created_by, deleted_at")
+    .is("deleted_at", null)
     .order("name", { ascending: true });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as GroupRow[];
+}
+
+export async function fetchPendingDeletionGroups(userId: string): Promise<GroupRow[]> {
+  const { data, error } = await supabase
+    .from("groups")
+    .select("id, slug, name, category, image_url, created_by, deleted_at")
+    .eq("created_by", userId)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as GroupRow[];
+}
+
+export async function generateUniqueSlug(base: string): Promise<string> {
+  const clean = base
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 40);
+  if (!clean) throw new Error("Nome inválido");
+  const { data, error } = await supabase
+    .from("groups")
+    .select("slug")
+    .is("deleted_at", null)
+    .or(`slug.eq.${clean},slug.like.${clean}-%`);
+  if (error) throw error;
+  const taken = new Set((data ?? []).map((r: { slug: string }) => r.slug));
+  if (!taken.has(clean)) return clean;
+  let n = 1;
+  while (taken.has(`${clean}-${n}`)) n++;
+  return `${clean}-${n}`;
+}
+
+export async function softDeleteGroup(id: string) {
+  const { error } = await supabase
+    .from("groups")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export async function fetchTrendingKeywords(limit = 8): Promise<string[]> {
