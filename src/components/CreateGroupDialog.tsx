@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
 import { uploadImage, validateImage, MAX_GROUP_BYTES, formatBytes } from "@/lib/storage";
+import { generateUniqueSlug } from "@/lib/forum";
 
 const CATEGORIES = [
   "tecnologia",
@@ -50,10 +51,10 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return toast.error("Faça login");
-    const slug = slugify(name);
-    if (slug.length < 3) return toast.error("Nome inválido");
+    if (slugify(name).length < 3) return toast.error("Nome inválido");
     setBusy(true);
     try {
+      const slug = await generateUniqueSlug(name);
       let image_url: string | null = null;
       if (file) image_url = await uploadImage("groups", user.id, file);
       const { error } = await supabase.from("groups").insert({
@@ -65,7 +66,7 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
         created_by: user.id,
       });
       if (error) throw error;
-      toast.success("Grupo criado");
+      toast.success(`Grupo criado: g/${slug}`);
       qc.invalidateQueries({ queryKey: ["groups"] });
       onClose();
       setName(""); setDescription(""); setFile(null); setPreview(null);
@@ -115,6 +116,7 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
           />
           <p className="text-[11px] text-muted-foreground -mt-1">
             URL: g/{slugify(name) || "..."} · Criador: u/{profile?.username ?? "..."}
+            <br />Se a URL já existir, adicionamos -1, -2, -3… automaticamente.
           </p>
           <select
             value={category}
