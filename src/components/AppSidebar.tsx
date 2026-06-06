@@ -122,13 +122,6 @@ export function AppSidebar() {
           <div className="flex flex-col">
             {groups.map((g) => {
               const Icon = CATEGORY_ICON[g.category] ?? Shield;
-        <div className="mt-4 px-3 pb-2">
-          <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Grupos
-          </p>
-          <div className="flex flex-col">
-            {groups.map((g) => {
-              const Icon = CATEGORY_ICON[g.category] ?? Shield;
               const mine = user && g.created_by === user.id;
               return (
                 <div
