@@ -49,7 +49,10 @@ export function TrendingPanel() {
             >
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-medium">g/{g.slug}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{g.name}</p>
+                <p className="truncate text-[11px] text-muted-foreground">
+                  {g.name}
+                  {g.creator?.username ? ` · u/${g.creator.username}` : ""}
+                </p>
               </div>
             </li>
           ))}
