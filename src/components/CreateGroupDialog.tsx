@@ -52,7 +52,7 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
       let image_url: string | null = null;
       if (file) image_url = await uploadImage("groups", user.id, file);
       const { error } = await supabase.from("groups").insert({
-        name: `${name} · u/${profile?.username ?? "user"}`,
+        name,
         slug,
         category,
         description,
