@@ -244,18 +244,18 @@ function ProfilePage() {
               <h2 className="mb-2 text-sm font-semibold">Sobre</h2>
               {editing ? (
                 <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-medium text-muted-foreground">Nome de usuário</label>
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="usuario"
-                    className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
-                  />
                   <label className="text-[11px] font-medium text-muted-foreground">Nome de exibição</label>
                   <input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Nome de exibição"
+                    className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
+                  />
+                  <label className="text-[11px] font-medium text-muted-foreground">Nome de usuário</label>
+                  <input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="usuario"
                     className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
                   />
                   <label className="text-[11px] font-medium text-muted-foreground">Bio</label>
