@@ -93,27 +93,31 @@ export type GroupRow = {
   image_url: string | null;
   created_by: string | null;
   deleted_at: string | null;
+  creator?: { username: string; display_name: string | null } | null;
 };
+
+const GROUP_SELECT =
+  "id, slug, name, category, image_url, created_by, deleted_at, creator:profiles!groups_created_by_profiles_fkey(username, display_name)";
 
 export async function fetchGroups(): Promise<GroupRow[]> {
   const { data, error } = await supabase
     .from("groups")
-    .select("id, slug, name, category, image_url, created_by, deleted_at")
+    .select(GROUP_SELECT)
     .is("deleted_at", null)
     .order("name", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as GroupRow[];
+  return (data ?? []) as unknown as GroupRow[];
 }
 
 export async function fetchPendingDeletionGroups(userId: string): Promise<GroupRow[]> {
   const { data, error } = await supabase
     .from("groups")
-    .select("id, slug, name, category, image_url, created_by, deleted_at")
+    .select(GROUP_SELECT)
     .eq("created_by", userId)
     .not("deleted_at", "is", null)
     .order("deleted_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as GroupRow[];
+  return (data ?? []) as unknown as GroupRow[];
 }
 
 export async function generateUniqueSlug(base: string): Promise<string> {

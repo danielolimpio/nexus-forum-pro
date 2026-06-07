@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TopBar } from "@/components/TopBar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TrendingPanel } from "@/components/TrendingPanel";
@@ -19,6 +19,33 @@ export const Route = createFileRoute("/perfil")({
   head: () => ({ meta: [{ title: "Perfil — GroupeForum.pro" }] }),
   component: ProfilePage,
 });
+
+function linkify(text: string) {
+  const re = /((?:https?:\/\/|www\.)[^\s]+|[a-z0-9-]+(?:\.[a-z0-9-]+)+\.[a-z]{2,}(?:\/[^\s]*)?)/gi;
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const raw = m[0];
+    const href = /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^www\./i, "")}`;
+    parts.push(
+      <a
+        key={`l${i++}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:underline"
+      >
+        {raw}
+      </a>,
+    );
+    last = m.index + raw.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
 
 function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useAuth();
@@ -244,18 +271,18 @@ function ProfilePage() {
               <h2 className="mb-2 text-sm font-semibold">Sobre</h2>
               {editing ? (
                 <div className="flex flex-col gap-2">
-                  <label className="text-[11px] font-medium text-muted-foreground">Nome de usuário</label>
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="usuario"
-                    className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
-                  />
                   <label className="text-[11px] font-medium text-muted-foreground">Nome de exibição</label>
                   <input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Nome de exibição"
+                    className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
+                  />
+                  <label className="text-[11px] font-medium text-muted-foreground">Nome de usuário</label>
+                  <input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="usuario"
                     className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
                   />
                   <label className="text-[11px] font-medium text-muted-foreground">Bio</label>
@@ -284,8 +311,8 @@ function ProfilePage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {profile?.bio || "Adicione uma descrição ao seu perfil."}
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
+                  {profile?.bio ? linkify(profile.bio) : "Adicione uma descrição ao seu perfil."}
                 </p>
               )}
             </section>
