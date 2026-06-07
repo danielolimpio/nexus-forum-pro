@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -6,17 +6,7 @@ import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
 import { uploadImage, validateImage, MAX_GROUP_BYTES, formatBytes } from "@/lib/storage";
 import { generateUniqueSlug } from "@/lib/forum";
-
-const CATEGORIES = [
-  "tecnologia",
-  "negocios",
-  "ciencia",
-  "educacao",
-  "saude",
-  "direito",
-  "cultura",
-  "engenharia",
-];
+import { CATEGORIES } from "@/lib/categories";
 
 function slugify(s: string) {
   return s
@@ -32,7 +22,11 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
   const { user, profile } = useAuth();
   const qc = useQueryClient();
   const [name, setName] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const sorted = useMemo(
+    () => [...CATEGORIES].sort((a, b) => a.label.localeCompare(b.label, "pt-BR")),
+    [],
+  );
+  const [category, setCategory] = useState(sorted[0]?.value ?? "");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -80,7 +74,7 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
-      <div className="w-full max-w-xl surface-card p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-xl surface-card p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold">Criar grupo</h2>
           <button onClick={onClose} className="grid h-7 w-7 place-items-center rounded hover:bg-surface-2">
@@ -116,17 +110,33 @@ export function CreateGroupDialog({ open, onClose }: { open: boolean; onClose: (
           />
           <p className="text-[11px] text-muted-foreground -mt-1">
             URL: g/{slugify(name) || "..."} · Criador: u/{profile?.username ?? "..."}
-            <br />Se a URL já existir, adicionamos -1, -2, -3… automaticamente.
           </p>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-md hairline bg-surface-2 px-3 py-2 text-sm outline-none"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div>
+            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">Categoria</p>
+            <div className="grid max-h-64 grid-cols-2 gap-1.5 overflow-y-auto rounded-md hairline bg-surface-2 p-2 sm:grid-cols-3">
+              {sorted.map((c) => {
+                const Icon = c.icon;
+                const active = category === c.value;
+                return (
+                  <button
+                    type="button"
+                    key={c.value}
+                    onClick={() => setCategory(c.value)}
+                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-surface-1 text-foreground"
+                    }`}
+                  >
+                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${active ? "bg-primary-foreground/15" : "bg-surface-1"}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="truncate">{c.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <textarea
             rows={3}
             maxLength={300}
