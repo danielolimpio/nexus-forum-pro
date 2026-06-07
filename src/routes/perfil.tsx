@@ -284,8 +284,8 @@ function ProfilePage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {profile?.bio || "Adicione uma descrição ao seu perfil."}
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
+                  {profile?.bio ? linkify(profile.bio) : "Adicione uma descrição ao seu perfil."}
                 </p>
               )}
             </section>
