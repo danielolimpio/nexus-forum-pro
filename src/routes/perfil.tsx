@@ -22,7 +22,7 @@ export const Route = createFileRoute("/perfil")({
 
 function linkify(text: string) {
   const re = /((?:https?:\/\/|www\.)[^\s]+|[a-z0-9-]+(?:\.[a-z0-9-]+)+\.[a-z]{2,}(?:\/[^\s]*)?)/gi;
-  const parts: (string | JSX.Element)[] = [];
+  const parts: ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
   let i = 0;
