@@ -4,7 +4,7 @@ const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 
 export const MAX_AVATAR_BYTES = 300 * 1024; // 300 KB
 export const MAX_COVER_BYTES = 500 * 1024; // 500 KB
-export const MAX_GROUP_BYTES = 2 * 1024 * 1024; // 2 MB
+export const MAX_GROUP_BYTES = 300 * 1024; // 300 KB
 
 export function formatBytes(b: number) {
   if (b < 1024) return `${b} B`;

@@ -187,8 +187,10 @@ function ProfilePage() {
                   />
                 </div>
                 <div className="flex-1 pt-16">
-                  <h1 className="text-lg font-semibold">u/{profile?.username ?? "..."}</h1>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <h1 className="text-xl font-semibold leading-tight">
+                    {profile?.display_name || profile?.username || "..."}
+                  </h1>
+                  <p className="text-xs font-normal text-muted-foreground">u/{profile?.username ?? "..."}</p>
                   {profile?.website && !editing && (
                     <a
                       href={profile.website}
@@ -201,6 +203,7 @@ function ProfilePage() {
                     </a>
                   )}
                 </div>
+
                 <button
                   onClick={() => setEditing((v) => !v)}
                   className="inline-flex items-center gap-1.5 rounded-md hairline bg-surface-1 px-3 py-1.5 text-sm hover:bg-surface-2 self-end"
