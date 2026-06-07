@@ -117,7 +117,7 @@ export async function fetchPendingDeletionGroups(userId: string): Promise<GroupR
     .not("deleted_at", "is", null)
     .order("deleted_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as GroupRow[];
+  return (data ?? []) as unknown as GroupRow[];
 }
 
 export async function generateUniqueSlug(base: string): Promise<string> {
