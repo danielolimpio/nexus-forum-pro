@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TopBar } from "@/components/TopBar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TrendingPanel } from "@/components/TrendingPanel";
