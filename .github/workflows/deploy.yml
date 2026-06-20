@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Clonar o repositório
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Node.js 20
         uses: actions/setup-node@v4
@@ -20,21 +21,64 @@ jobs:
       - name: Instalar dependências
         run: npm install
 
-      - name: Build do projeto
+      - name: Build do projeto (TanStack Start)
         run: npm run build
 
-      - name: Mostrar arquivos gerados
-        run: ls -la dist/
+      - name: Preparar pasta de deploy estática
+        run: |
+          set -e
+          # TanStack Start (nitro) gera os assets de cliente em .output/public
+          if [ ! -d ".output/public" ]; then
+            echo "ERRO: .output/public não existe. Build falhou ou mudou de local."
+            ls -la .output/ || true
+            exit 1
+          fi
+          mkdir -p deploy
+          cp -r .output/public/. deploy/
+          # Garantir que existe index.html (prerender de "/")
+          if [ ! -f "deploy/index.html" ]; then
+            echo "AVISO: deploy/index.html não foi gerado pelo prerender."
+            ls -la deploy/
+          fi
+          # .htaccess para SPA fallback no Apache da Hostinger
+          cat > deploy/.htaccess <<'EOF'
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /
+            # Permite arquivos e diretórios reais
+            RewriteCond %{REQUEST_FILENAME} -f [OR]
+            RewriteCond %{REQUEST_FILENAME} -d
+            RewriteRule ^ - [L]
+            # Tudo o resto vai para o index.html (SPA)
+            RewriteRule . /index.html [L]
+          </IfModule>
+
+          # Cache longo para assets versionados
+          <IfModule mod_headers.c>
+            <FilesMatch "\.(?:js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
+              Header set Cache-Control "public, max-age=31536000, immutable"
+            </FilesMatch>
+            <FilesMatch "\.html$">
+              Header set Cache-Control "no-cache"
+            </FilesMatch>
+          </IfModule>
+          EOF
+          echo "Conteúdo final para deploy:"
+          ls -la deploy/
 
       - name: Deploy FTP para Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           port: 21
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          local-dir: ./dist/
-          server-dir: /
-          dangerous-clean-slate: true
+          local-dir: ./deploy/
+          server-dir: /public_html/
+          dangerous-clean-slate: false
           dry-run: false
-          log-level: verbose
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
