@@ -11,12 +11,5 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
-    // Prerender o index para gerar arquivos estáticos compatíveis com hospedagem FTP (Hostinger).
-    prerender: {
-      enabled: true,
-      crawlLinks: false,
-      autoSubfolderIndex: true,
-    },
-    pages: [{ path: "/" }],
   },
 });
