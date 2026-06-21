@@ -24,32 +24,73 @@ jobs:
       - name: Build do projeto (TanStack Start)
         run: npm run build
 
+      - name: Pré-renderizar index.html via Wrangler
+        run: |
+          set -e
+          # O build do TanStack Start gera um Worker Cloudflare em dist/.
+          # Subimos esse Worker localmente com wrangler para capturar o HTML
+          # renderizado da rota "/" e usar como shell estática (SPA) na Hostinger.
+          if [ ! -d "dist/client" ] || [ ! -d "dist/server" ]; then
+            echo "ERRO: build não produziu dist/client e dist/server."
+            ls -la dist/ || true
+            exit 1
+          fi
+
+          echo "Iniciando wrangler dev em background..."
+          npx --yes wrangler@latest dev \
+            --cwd dist/server \
+            --port 8787 \
+            --ip 127.0.0.1 \
+            --local \
+            --log-level warn > wrangler.log 2>&1 &
+          WRANGLER_PID=$!
+
+          # Aguarda servidor responder (até 60s)
+          echo "Aguardando wrangler iniciar..."
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null "http://127.0.0.1:8787/"; then
+              echo "Wrangler pronto."
+              break
+            fi
+            sleep 1
+          done
+
+          # Captura o HTML renderizado de "/"
+          curl -sf "http://127.0.0.1:8787/" -o index.html || {
+            echo "ERRO: não foi possível capturar index.html"
+            cat wrangler.log || true
+            kill $WRANGLER_PID || true
+            exit 1
+          }
+
+          kill $WRANGLER_PID || true
+          wait $WRANGLER_PID 2>/dev/null || true
+
+          if [ ! -s index.html ]; then
+            echo "ERRO: index.html vazio."
+            exit 1
+          fi
+          echo "index.html capturado: $(wc -c < index.html) bytes."
+
       - name: Preparar pasta de deploy estática
         run: |
           set -e
-          # TanStack Start (nitro) gera os assets de cliente em .output/public
-          if [ ! -d ".output/public" ]; then
-            echo "ERRO: .output/public não existe. Build falhou ou mudou de local."
-            ls -la .output/ || true
-            exit 1
-          fi
           mkdir -p deploy
-          cp -r .output/public/. deploy/
-          # Garantir que existe index.html (prerender de "/")
-          if [ ! -f "deploy/index.html" ]; then
-            echo "AVISO: deploy/index.html não foi gerado pelo prerender."
-            ls -la deploy/
-          fi
-          # .htaccess para SPA fallback no Apache da Hostinger
+          # Copia todos os assets do client (JS, CSS, imagens) para a raiz do deploy.
+          cp -r dist/client/. deploy/
+          # Coloca o index.html pré-renderizado como shell da SPA.
+          cp index.html deploy/index.html
+
+          # .htaccess para SPA fallback no Apache da Hostinger.
           cat > deploy/.htaccess <<'EOF'
           <IfModule mod_rewrite.c>
             RewriteEngine On
             RewriteBase /
-            # Permite arquivos e diretórios reais
+            # Permite arquivos e diretórios reais (assets, etc.)
             RewriteCond %{REQUEST_FILENAME} -f [OR]
             RewriteCond %{REQUEST_FILENAME} -d
             RewriteRule ^ - [L]
-            # Tudo o resto vai para o index.html (SPA)
+            # Qualquer outra rota cai no index.html (SPA hydration).
             RewriteRule . /index.html [L]
           </IfModule>
 
@@ -62,7 +103,12 @@ jobs:
               Header set Cache-Control "no-cache"
             </FilesMatch>
           </IfModule>
+
+          # Garante que index.html é servido como padrão e remove listagem de diretório.
+          DirectoryIndex index.html
+          Options -Indexes
           EOF
+
           echo "Conteúdo final para deploy:"
           ls -la deploy/
 
