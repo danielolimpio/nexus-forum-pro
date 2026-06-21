@@ -43,7 +43,7 @@ jobs:
 
           echo "Iniciando wrangler dev em background..."
           npx --yes wrangler@4.50.0 dev \
-            --cwd dist/server \
+            --config dist/server/wrangler.json \
             --port 8787 \
             --ip 127.0.0.1 \
             --local \
