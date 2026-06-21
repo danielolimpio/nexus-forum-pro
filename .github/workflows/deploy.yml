@@ -13,13 +13,14 @@ jobs:
       - name: Clonar o repositório
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: npm install
+        run: npm ci
 
       - name: Build do projeto (TanStack Start)
         run: npm run build
@@ -36,8 +37,12 @@ jobs:
             exit 1
           fi
 
+          echo "Versões em uso:"
+          node --version
+          npm --version
+
           echo "Iniciando wrangler dev em background..."
-          npx --yes wrangler@latest dev \
+          npx --yes wrangler@4.50.0 dev \
             --cwd dist/server \
             --port 8787 \
             --ip 127.0.0.1 \
@@ -52,19 +57,31 @@ jobs:
               echo "Wrangler pronto."
               break
             fi
+            if ! kill -0 "$WRANGLER_PID" 2>/dev/null; then
+              echo "ERRO: wrangler encerrou antes de iniciar. Log:"
+              cat wrangler.log || true
+              exit 1
+            fi
             sleep 1
           done
+
+          if ! curl -sf -o /dev/null "http://127.0.0.1:8787/"; then
+            echo "ERRO: wrangler não respondeu dentro do tempo limite. Log:"
+            cat wrangler.log || true
+            kill "$WRANGLER_PID" 2>/dev/null || true
+            exit 1
+          fi
 
           # Captura o HTML renderizado de "/"
           curl -sf "http://127.0.0.1:8787/" -o index.html || {
             echo "ERRO: não foi possível capturar index.html"
             cat wrangler.log || true
-            kill $WRANGLER_PID || true
+            kill "$WRANGLER_PID" 2>/dev/null || true
             exit 1
           }
 
-          kill $WRANGLER_PID || true
-          wait $WRANGLER_PID 2>/dev/null || true
+          kill "$WRANGLER_PID" 2>/dev/null || true
+          wait "$WRANGLER_PID" 2>/dev/null || true
 
           if [ ! -s index.html ]; then
             echo "ERRO: index.html vazio."
