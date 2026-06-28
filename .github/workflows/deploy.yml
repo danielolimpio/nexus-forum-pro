@@ -20,7 +20,10 @@ jobs:
           cache: 'npm'
 
       - name: Instalar dependências
-        run: npm ci
+        # Usamos npm install no deploy porque o erro atual veio de package-lock
+        # fora de sincronia no GitHub Actions. Assim o workflow não trava no
+        # passo de instalação e segue para gerar/publicar a versão estática.
+        run: npm install --no-audit --no-fund
 
       - name: Build do projeto (TanStack Start)
         run: npm run build
@@ -92,6 +95,7 @@ jobs:
       - name: Preparar pasta de deploy estática
         run: |
           set -e
+          rm -rf deploy
           mkdir -p deploy
           # Copia todos os assets do client (JS, CSS, imagens) para a raiz do deploy.
           cp -r dist/client/. deploy/
@@ -137,7 +141,10 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
           local-dir: ./deploy/
-          server-dir: /public_html/
+          # Na Hostinger, o usuário FTP do domínio normalmente já aponta para
+          # a pasta pública correta. Enviar para ./ evita criar public_html dentro
+          # de public_html, que deixa o domínio exibindo 403 por falta de index.html.
+          server-dir: ./
           dangerous-clean-slate: false
           dry-run: false
           log-level: standard
