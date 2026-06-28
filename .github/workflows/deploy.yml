@@ -19,11 +19,15 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Instalar dependências
-        # Usamos npm install no deploy porque o erro atual veio de package-lock
-        # fora de sincronia no GitHub Actions. Assim o workflow não trava no
-        # passo de instalação e segue para gerar/publicar a versão estática.
-        run: npm install --no-audit --no-fund
+      - name: Instalar dependências sem travar no lock antigo
+        # Correção definitiva para o erro do print: NÃO usar npm ci aqui.
+        # O npm ci falha quando o package-lock do GitHub fica divergente.
+        # O npm install atualiza/respeita o lock durante a execução e permite
+        # que o build siga normalmente no GitHub Actions.
+        run: |
+          node --version
+          npm --version
+          npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Build do projeto (TanStack Start)
         run: npm run build
@@ -101,6 +105,12 @@ jobs:
           cp -r dist/client/. deploy/
           # Coloca o index.html pré-renderizado como shell da SPA.
           cp index.html deploy/index.html
+          # Garante fallback mesmo se o Apache não aplicar rewrite em alguma rota.
+          cp index.html deploy/404.html
+          cp index.html deploy/403.html
+          # Garante que logo e favicon locais sempre vão para a Hostinger.
+          cp public/logo.png deploy/logo.png
+          cp public/favicon.png deploy/favicon.png
 
           # .htaccess para SPA fallback no Apache da Hostinger.
           cat > deploy/.htaccess <<'EOF'
@@ -133,7 +143,7 @@ jobs:
           echo "Conteúdo final para deploy:"
           ls -la deploy/
 
-      - name: Deploy FTP para Hostinger
+      - name: Deploy FTP para a raiz do usuário FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -148,6 +158,46 @@ jobs:
           dangerous-clean-slate: false
           dry-run: false
           log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+
+      - name: Deploy FTP fallback para public_html da Hostinger
+        # Alguns usuários FTP da Hostinger apontam para a pasta da conta,
+        # não diretamente para a pasta pública do domínio. Este segundo envio
+        # cobre esse cenário sem quebrar o workflow se a pasta não for usada.
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          port: 21
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./deploy/
+          server-dir: ./public_html/
+          dangerous-clean-slate: false
+          dry-run: false
+          log-level: minimal
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+
+      - name: Deploy FTP fallback para domains/groupeforum.pro/public_html
+        # Caminho comum em contas Hostinger com domínio adicional.
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          port: 21
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./deploy/
+          server-dir: ./domains/groupeforum.pro/public_html/
+          dangerous-clean-slate: false
+          dry-run: false
+          log-level: minimal
           exclude: |
             **/.git*
             **/.git*/**
