@@ -125,6 +125,9 @@ jobs:
             RewriteRule . /index.html [L]
           </IfModule>
 
+          ErrorDocument 403 /index.html
+          ErrorDocument 404 /index.html
+
           # Cache longo para assets versionados
           <IfModule mod_headers.c>
             <FilesMatch "\.(?:js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
@@ -137,7 +140,6 @@ jobs:
 
           # Garante que index.html é servido como padrão e remove listagem de diretório.
           DirectoryIndex index.html
-          Options -Indexes
           EOF
 
           echo "Conteúdo final para deploy:"
