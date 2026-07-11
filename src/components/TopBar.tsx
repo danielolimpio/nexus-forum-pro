@@ -19,7 +19,7 @@ export function TopBar() {
     <header className="sticky top-0 z-30 border-b border-border bg-surface-1/80 backdrop-blur">
       <div className="flex h-14 items-center gap-4 px-4 lg:px-6">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="GroupeForum" className="h-8 w-8 object-contain" />
+          <img src="/logo.png" alt="Logotipo GroupeForum" className="h-8 w-8 object-contain" />
           <div className="hidden sm:flex flex-col leading-none">
             <span className="text-sm font-semibold tracking-tight">GroupeForum</span>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">.pro</span>

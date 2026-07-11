@@ -43,7 +43,10 @@ function Home() {
                 <button className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-muted-foreground hover:text-foreground">
                   <TrendingUp className="h-3.5 w-3.5" /> Top
                 </button>
-                <button className="ml-1 inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-muted-foreground hover:text-foreground">
+                <button
+                  aria-label="Filtrar discussões"
+                  className="ml-1 inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                >
                   <Filter className="h-3.5 w-3.5" />
                 </button>
               </div>
