@@ -71,6 +71,9 @@ function AuthPage() {
         </Link>
 
         <div className="surface-card p-6">
+          <h1 className="mb-4 text-center text-lg font-semibold tracking-tight">
+            Entrar ou Criar Conta
+          </h1>
           <div className="mb-4 flex hairline rounded-md bg-surface-2 p-1 text-sm">
             <button
               onClick={() => setMode("signin")}

@@ -191,6 +191,7 @@ function ProfilePage() {
                   </div>
                   <button
                     type="button"
+                    aria-label="Trocar foto do perfil"
                     onClick={() => {
                       setShowLimits(true);
                       avatarInput.current?.click();
