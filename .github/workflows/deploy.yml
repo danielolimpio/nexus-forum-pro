@@ -78,7 +78,7 @@ jobs:
 
           # Aguarda servidor responder (até 60s)
           echo "Aguardando wrangler iniciar..."
-          for i in $(seq 1 60); do
+          for _attempt in $(seq 1 60); do
             if curl -sf -o /dev/null "http://127.0.0.1:8787/"; then
               echo "Wrangler pronto."
               break
