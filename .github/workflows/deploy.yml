@@ -32,18 +32,37 @@ jobs:
       - name: Build do projeto (TanStack Start)
         run: npm run build
 
+      - name: Validar saída do build
+        run: |
+          set -e
+          echo "Arquivos gerados após o build:"
+          ls -la
+          echo "Conteúdo de dist/:"
+          ls -la dist || true
+          echo "Conteúdo de dist/client:"
+          ls -la dist/client || true
+          echo "Conteúdo de dist/server:"
+          ls -la dist/server || true
+
+          if [ ! -d "dist/client" ] || [ ! -d "dist/server" ]; then
+            echo "ERRO: build não produziu dist/client e dist/server."
+            echo "Possíveis saídas encontradas:"
+            find . -maxdepth 3 -type d \( -name client -o -name server -o -name public \) -print
+            exit 1
+          fi
+
+          if [ ! -f "dist/server/wrangler.json" ]; then
+            echo "ERRO: dist/server/wrangler.json não foi gerado."
+            find dist/server -maxdepth 2 -type f -print
+            exit 1
+          fi
+
       - name: Pré-renderizar index.html via Wrangler
         run: |
           set -e
           # O build do TanStack Start gera um Worker Cloudflare em dist/.
           # Subimos esse Worker localmente com wrangler para capturar o HTML
           # renderizado da rota "/" e usar como shell estática (SPA) na Hostinger.
-          if [ ! -d "dist/client" ] || [ ! -d "dist/server" ]; then
-            echo "ERRO: build não produziu dist/client e dist/server."
-            ls -la dist/ || true
-            exit 1
-          fi
-
           echo "Versões em uso:"
           node --version
           npm --version
@@ -145,62 +164,50 @@ jobs:
           echo "Conteúdo final para deploy:"
           ls -la deploy/
 
-      - name: Deploy FTP para a raiz do usuário FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          port: 21
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./deploy/
-          # Na Hostinger, o usuário FTP do domínio normalmente já aponta para
-          # a pasta pública correta. Enviar para ./ evita criar public_html dentro
-          # de public_html, que deixa o domínio exibindo 403 por falta de index.html.
-          server-dir: ./
-          dangerous-clean-slate: false
-          dry-run: false
-          log-level: standard
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+      - name: Instalar cliente FTP confiável
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
 
-      - name: Deploy FTP fallback para public_html da Hostinger
-        # Alguns usuários FTP da Hostinger apontam para a pasta da conta,
-        # não diretamente para a pasta pública do domínio. Este segundo envio
-        # cobre esse cenário sem quebrar o workflow se a pasta não for usada.
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          port: 21
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./deploy/
-          server-dir: ./public_html/
-          dangerous-clean-slate: false
-          dry-run: false
-          log-level: minimal
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+      - name: Deploy FTP para Hostinger com fallback verificado
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          set -euo pipefail
 
-      - name: Deploy FTP fallback para domains/groupeforum.pro/public_html
-        # Caminho comum em contas Hostinger com domínio adicional.
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          port: 21
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./deploy/
-          server-dir: ./domains/groupeforum.pro/public_html/
-          dangerous-clean-slate: false
-          dry-run: false
-          log-level: minimal
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+          if [ -z "${FTP_HOST}" ] || [ -z "${FTP_USER}" ] || [ -z "${FTP_PASS}" ]; then
+            echo "ERRO: configure os secrets FTP_HOST, FTP_USER e FTP_PASS no GitHub."
+            exit 1
+          fi
+
+          TARGETS=(
+            "/"
+            "/public_html"
+            "/domains/groupeforum.pro/public_html"
+          )
+
+          deploy_ok=0
+          for target in "${TARGETS[@]}"; do
+            echo "Tentando publicar em ${target} ..."
+            if lftp -u "${FTP_USER},${FTP_PASS}" "${FTP_HOST}" -e "
+              set ftp:ssl-allow no;
+              set net:timeout 20;
+              set net:max-retries 2;
+              set net:reconnect-interval-base 5;
+              mkdir -p ${target};
+              mirror --reverse --verbose --only-newer --parallel=3 ./deploy ${target};
+              bye
+            "; then
+              echo "Deploy enviado com sucesso para ${target}."
+              deploy_ok=1
+            else
+              echo "Aviso: não foi possível publicar em ${target}; tentando próximo caminho."
+            fi
+          done
+
+          if [ "${deploy_ok}" -ne 1 ]; then
+            echo "ERRO: nenhum caminho FTP aceitou o deploy. Verifique se o usuário FTP tem permissão de escrita no domínio groupeforum.pro."
+            exit 1
+          fi
