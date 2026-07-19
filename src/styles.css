@@ -40,8 +40,8 @@
   --color-tier-reply-foreground: var(--tier-reply-foreground);
   --color-tier-thread: var(--tier-thread);
   --color-tier-thread-foreground: var(--tier-thread-foreground);
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Roboto", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
   --shadow-elegant: 0 1px 0 0 color-mix(in oklab, var(--foreground) 4%, transparent),
                     0 12px 32px -16px color-mix(in oklab, var(--foreground) 14%, transparent);
 }
@@ -133,6 +133,7 @@
 @layer base {
   * { border-color: var(--color-border); }
   html, body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  *, button, input, textarea, select { font-family: var(--font-sans); }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
