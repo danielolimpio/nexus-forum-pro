@@ -29,10 +29,10 @@ import { CreateGroupDialog } from "./CreateGroupDialog";
 
 const NAV = [
   { to: "/", label: "Início", icon: Home },
-  { to: "/", label: "Popular", icon: TrendingUp },
-  { to: "/", label: "Explorar", icon: Compass },
-  { to: "/", label: "Notícias", icon: Newspaper },
-];
+  { to: "/popular", label: "Popular", icon: TrendingUp },
+  { to: "/explorar", label: "Explorar", icon: Compass },
+  { to: "/noticias", label: "Notícias", icon: Newspaper },
+] as const;
 
 const CATEGORY_ICON: Record<string, typeof Home> = {
   tecnologia: Cpu,
