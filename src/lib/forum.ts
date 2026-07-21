@@ -52,7 +52,7 @@ export async function fetchPosts(
     .select(
       "id, title, body, keyword, created_at, group:groups!inner(slug,name,category), author:profiles(id,username,display_name,avatar_url), replies(count)",
     );
-  if (categories && categories.length) q = q.in("group.category", categories);
+  if (categories && categories.length) q = q.in("groups.category", categories);
   if (sort === "hot") {
     const since = new Date(Date.now() - 7 * 86400000).toISOString();
     q = q.gte("created_at", since);
