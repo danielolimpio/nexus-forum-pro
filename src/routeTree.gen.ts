@@ -9,14 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TopRouteImport } from './routes/top'
+import { Route as RecentesRouteImport } from './routes/recentes'
+import { Route as PopularRouteImport } from './routes/popular'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as NoticiasRouteImport } from './routes/noticias'
+import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ThreadIdRouteImport } from './routes/thread.$id'
 
+const TopRoute = TopRouteImport.update({
+  id: '/top',
+  path: '/top',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecentesRoute = RecentesRouteImport.update({
+  id: '/recentes',
+  path: '/recentes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PopularRoute = PopularRouteImport.update({
+  id: '/popular',
+  path: '/popular',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticiasRoute = NoticiasRouteImport.update({
+  id: '/noticias',
+  path: '/noticias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExplorarRoute = ExplorarRouteImport.update({
+  id: '/explorar',
+  path: '/explorar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -38,44 +68,127 @@ const ThreadIdRoute = ThreadIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/explorar': typeof ExplorarRoute
+  '/noticias': typeof NoticiasRoute
   '/perfil': typeof PerfilRoute
+  '/popular': typeof PopularRoute
+  '/recentes': typeof RecentesRoute
+  '/top': typeof TopRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/explorar': typeof ExplorarRoute
+  '/noticias': typeof NoticiasRoute
   '/perfil': typeof PerfilRoute
+  '/popular': typeof PopularRoute
+  '/recentes': typeof RecentesRoute
+  '/top': typeof TopRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/explorar': typeof ExplorarRoute
+  '/noticias': typeof NoticiasRoute
   '/perfil': typeof PerfilRoute
+  '/popular': typeof PopularRoute
+  '/recentes': typeof RecentesRoute
+  '/top': typeof TopRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/perfil' | '/thread/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/explorar'
+    | '/noticias'
+    | '/perfil'
+    | '/popular'
+    | '/recentes'
+    | '/top'
+    | '/thread/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/perfil' | '/thread/$id'
-  id: '__root__' | '/' | '/auth' | '/perfil' | '/thread/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/explorar'
+    | '/noticias'
+    | '/perfil'
+    | '/popular'
+    | '/recentes'
+    | '/top'
+    | '/thread/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/explorar'
+    | '/noticias'
+    | '/perfil'
+    | '/popular'
+    | '/recentes'
+    | '/top'
+    | '/thread/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ExplorarRoute: typeof ExplorarRoute
+  NoticiasRoute: typeof NoticiasRoute
   PerfilRoute: typeof PerfilRoute
+  PopularRoute: typeof PopularRoute
+  RecentesRoute: typeof RecentesRoute
+  TopRoute: typeof TopRoute
   ThreadIdRoute: typeof ThreadIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/top': {
+      id: '/top'
+      path: '/top'
+      fullPath: '/top'
+      preLoaderRoute: typeof TopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recentes': {
+      id: '/recentes'
+      path: '/recentes'
+      fullPath: '/recentes'
+      preLoaderRoute: typeof RecentesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/popular': {
+      id: '/popular'
+      path: '/popular'
+      fullPath: '/popular'
+      preLoaderRoute: typeof PopularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perfil': {
       id: '/perfil'
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/noticias': {
+      id: '/noticias'
+      path: '/noticias'
+      fullPath: '/noticias'
+      preLoaderRoute: typeof NoticiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explorar': {
+      id: '/explorar'
+      path: '/explorar'
+      fullPath: '/explorar'
+      preLoaderRoute: typeof ExplorarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -105,19 +218,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ExplorarRoute: ExplorarRoute,
+  NoticiasRoute: NoticiasRoute,
   PerfilRoute: PerfilRoute,
+  PopularRoute: PopularRoute,
+  RecentesRoute: RecentesRoute,
+  TopRoute: TopRoute,
   ThreadIdRoute: ThreadIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

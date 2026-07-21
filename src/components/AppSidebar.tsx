@@ -29,10 +29,10 @@ import { CreateGroupDialog } from "./CreateGroupDialog";
 
 const NAV = [
   { to: "/", label: "Início", icon: Home },
-  { to: "/", label: "Popular", icon: TrendingUp },
-  { to: "/", label: "Explorar", icon: Compass },
-  { to: "/", label: "Notícias", icon: Newspaper },
-];
+  { to: "/popular", label: "Popular", icon: TrendingUp },
+  { to: "/explorar", label: "Explorar", icon: Compass },
+  { to: "/noticias", label: "Notícias", icon: Newspaper },
+] as const;
 
 const CATEGORY_ICON: Record<string, typeof Home> = {
   tecnologia: Cpu,
@@ -77,8 +77,8 @@ export function AppSidebar() {
     <>
       <aside className="hidden lg:flex w-64 shrink-0 flex-col gap-1 border-r border-border bg-surface-1/60 backdrop-blur-sm">
         <nav className="px-3 pt-4 pb-2">
-          {NAV.map(({ to, label, icon: Icon }, i) => {
-            const active = i === 0 && pathname === to;
+          {NAV.map(({ to, label, icon: Icon }) => {
+            const active = pathname === to;
             return (
               <Link
                 key={label}
