@@ -40,16 +40,39 @@ export function normalizeKeyword(s: string) {
     .trim();
 }
 
-export async function fetchPosts(limit = 30): Promise<PostRow[]> {
-  const { data, error } = await supabase
+export type FeedSort = "hot" | "recent" | "top";
+
+export async function fetchPosts(
+  limit = 30,
+  sort: FeedSort = "recent",
+  categories?: string[],
+): Promise<PostRow[]> {
+  let q = supabase
     .from("posts")
     .select(
-      "id, title, body, keyword, created_at, group:groups(slug,name,category), author:profiles(id,username,display_name,avatar_url)",
-    )
-    .order("created_at", { ascending: false })
-    .limit(limit);
+      "id, title, body, keyword, created_at, group:groups!inner(slug,name,category), author:profiles(id,username,display_name,avatar_url), replies(count)",
+    );
+  if (categories && categories.length) q = q.in("group.category", categories);
+  if (sort === "hot") {
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    q = q.gte("created_at", since);
+  }
+  q = q.order("created_at", { ascending: false }).limit(sort === "top" ? 200 : limit * 2);
+  const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as unknown as PostRow[];
+  const rows = ((data ?? []) as unknown as (PostRow & { replies: { count: number }[] })[])
+    .filter((r) => r.group)
+    .map((r) => ({ ...r, reply_count: r.replies?.[0]?.count ?? 0 }));
+  if (sort === "top") {
+    rows.sort((a, b) => (b.reply_count ?? 0) - (a.reply_count ?? 0));
+  } else if (sort === "hot") {
+    rows.sort((a, b) => {
+      const ageA = (Date.now() - new Date(a.created_at).getTime()) / 3600000 + 2;
+      const ageB = (Date.now() - new Date(b.created_at).getTime()) / 3600000 + 2;
+      return (b.reply_count ?? 0) / ageB - (a.reply_count ?? 0) / ageA;
+    });
+  }
+  return rows.slice(0, limit);
 }
 
 export async function fetchPost(id: string): Promise<PostRow | null> {
