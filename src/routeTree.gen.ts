@@ -18,6 +18,7 @@ import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ThreadIdRouteImport } from './routes/thread.$id'
+import { Route as GSlugRouteImport } from './routes/g.$slug'
 
 const TopRoute = TopRouteImport.update({
   id: '/top',
@@ -64,6 +65,11 @@ const ThreadIdRoute = ThreadIdRouteImport.update({
   path: '/thread/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GSlugRoute = GSlugRouteImport.update({
+  id: '/g/$slug',
+  path: '/g/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/popular': typeof PopularRoute
   '/recentes': typeof RecentesRoute
   '/top': typeof TopRoute
+  '/g/$slug': typeof GSlugRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/popular': typeof PopularRoute
   '/recentes': typeof RecentesRoute
   '/top': typeof TopRoute
+  '/g/$slug': typeof GSlugRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/popular': typeof PopularRoute
   '/recentes': typeof RecentesRoute
   '/top': typeof TopRoute
+  '/g/$slug': typeof GSlugRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/popular'
     | '/recentes'
     | '/top'
+    | '/g/$slug'
     | '/thread/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/popular'
     | '/recentes'
     | '/top'
+    | '/g/$slug'
     | '/thread/$id'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/popular'
     | '/recentes'
     | '/top'
+    | '/g/$slug'
     | '/thread/$id'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   PopularRoute: typeof PopularRoute
   RecentesRoute: typeof RecentesRoute
   TopRoute: typeof TopRoute
+  GSlugRoute: typeof GSlugRoute
   ThreadIdRoute: typeof ThreadIdRoute
 }
 
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$slug': {
+      id: '/g/$slug'
+      path: '/g/$slug'
+      fullPath: '/g/$slug'
+      preLoaderRoute: typeof GSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   PopularRoute: PopularRoute,
   RecentesRoute: RecentesRoute,
   TopRoute: TopRoute,
+  GSlugRoute: GSlugRoute,
   ThreadIdRoute: ThreadIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -31,8 +31,9 @@ const NAV = [
   { to: "/", label: "Início", icon: Home },
   { to: "/popular", label: "Popular", icon: TrendingUp },
   { to: "/explorar", label: "Explorar", icon: Compass },
-  { to: "/noticias", label: "Notícias", icon: Newspaper },
+  { to: "/blog", label: "Blog", icon: Newspaper },
 ] as const;
+
 
 const CATEGORY_ICON: Record<string, typeof Home> = {
   tecnologia: Cpu,
@@ -128,7 +129,11 @@ export function AppSidebar() {
                   key={g.id}
                   className="group flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
                 >
-                  <Link to="/" className="flex flex-1 items-center gap-3 min-w-0">
+                  <Link
+                    to="/g/$slug"
+                    params={{ slug: g.slug }}
+                    className="flex flex-1 items-center gap-3 min-w-0"
+                  >
                     {g.image_url ? (
                       <img src={g.image_url} alt="" className="h-4 w-4 rounded-sm object-cover" />
                     ) : (
@@ -136,6 +141,7 @@ export function AppSidebar() {
                     )}
                     <span className="truncate">g/{g.slug}</span>
                   </Link>
+
                   {mine && (
                     <button
                       onClick={() => onDelete(g.id, g.slug)}
