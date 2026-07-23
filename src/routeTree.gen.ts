@@ -13,12 +13,13 @@ import { Route as TopRouteImport } from './routes/top'
 import { Route as RecentesRouteImport } from './routes/recentes'
 import { Route as PopularRouteImport } from './routes/popular'
 import { Route as PerfilRouteImport } from './routes/perfil'
-import { Route as NoticiasRouteImport } from './routes/noticias'
 import { Route as ExplorarRouteImport } from './routes/explorar'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ThreadIdRouteImport } from './routes/thread.$id'
 import { Route as GSlugRouteImport } from './routes/g.$slug'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 
 const TopRoute = TopRouteImport.update({
   id: '/top',
@@ -40,14 +41,14 @@ const PerfilRoute = PerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NoticiasRoute = NoticiasRouteImport.update({
-  id: '/noticias',
-  path: '/noticias',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ExplorarRoute = ExplorarRouteImport.update({
   id: '/explorar',
   path: '/explorar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -70,28 +71,35 @@ const GSlugRoute = GSlugRouteImport.update({
   path: '/g/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/explorar': typeof ExplorarRoute
-  '/noticias': typeof NoticiasRoute
   '/perfil': typeof PerfilRoute
   '/popular': typeof PopularRoute
   '/recentes': typeof RecentesRoute
   '/top': typeof TopRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/g/$slug': typeof GSlugRoute
   '/thread/$id': typeof ThreadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/explorar': typeof ExplorarRoute
-  '/noticias': typeof NoticiasRoute
   '/perfil': typeof PerfilRoute
   '/popular': typeof PopularRoute
   '/recentes': typeof RecentesRoute
   '/top': typeof TopRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/g/$slug': typeof GSlugRoute
   '/thread/$id': typeof ThreadIdRoute
 }
@@ -99,12 +107,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/explorar': typeof ExplorarRoute
-  '/noticias': typeof NoticiasRoute
   '/perfil': typeof PerfilRoute
   '/popular': typeof PopularRoute
   '/recentes': typeof RecentesRoute
   '/top': typeof TopRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/g/$slug': typeof GSlugRoute
   '/thread/$id': typeof ThreadIdRoute
 }
@@ -113,36 +122,39 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/blog'
     | '/explorar'
-    | '/noticias'
     | '/perfil'
     | '/popular'
     | '/recentes'
     | '/top'
+    | '/blog/$slug'
     | '/g/$slug'
     | '/thread/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/blog'
     | '/explorar'
-    | '/noticias'
     | '/perfil'
     | '/popular'
     | '/recentes'
     | '/top'
+    | '/blog/$slug'
     | '/g/$slug'
     | '/thread/$id'
   id:
     | '__root__'
     | '/'
     | '/auth'
+    | '/blog'
     | '/explorar'
-    | '/noticias'
     | '/perfil'
     | '/popular'
     | '/recentes'
     | '/top'
+    | '/blog/$slug'
     | '/g/$slug'
     | '/thread/$id'
   fileRoutesById: FileRoutesById
@@ -150,8 +162,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
   ExplorarRoute: typeof ExplorarRoute
-  NoticiasRoute: typeof NoticiasRoute
   PerfilRoute: typeof PerfilRoute
   PopularRoute: typeof PopularRoute
   RecentesRoute: typeof RecentesRoute
@@ -190,18 +202,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/noticias': {
-      id: '/noticias'
-      path: '/noticias'
-      fullPath: '/noticias'
-      preLoaderRoute: typeof NoticiasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/explorar': {
       id: '/explorar'
       path: '/explorar'
       fullPath: '/explorar'
       preLoaderRoute: typeof ExplorarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -232,14 +244,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
   }
 }
+
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
   ExplorarRoute: ExplorarRoute,
-  NoticiasRoute: NoticiasRoute,
   PerfilRoute: PerfilRoute,
   PopularRoute: PopularRoute,
   RecentesRoute: RecentesRoute,
