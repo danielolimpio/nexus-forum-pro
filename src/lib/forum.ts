@@ -132,6 +132,87 @@ export async function fetchGroups(): Promise<GroupRow[]> {
   return (data ?? []) as unknown as GroupRow[];
 }
 
+export async function fetchGroupBySlug(slug: string): Promise<GroupRow | null> {
+  const { data, error } = await supabase
+    .from("groups")
+    .select(GROUP_SELECT)
+    .eq("slug", slug)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as GroupRow) ?? null;
+}
+
+export async function fetchPostsByGroup(groupId: string): Promise<PostRow[]> {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(
+      "id, title, body, keyword, created_at, group:groups!inner(slug,name,category), author:profiles(id,username,display_name,avatar_url), replies(count)",
+    )
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return ((data ?? []) as unknown as (PostRow & { replies: { count: number }[] })[])
+    .filter((r) => r.group)
+    .map((r) => ({ ...r, reply_count: r.replies?.[0]?.count ?? 0 }));
+}
+
+export type ArticleRow = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  body: string;
+  cover_url: string | null;
+  created_at: string;
+  author: Author | null;
+};
+
+const ARTICLE_SELECT =
+  "id, slug, title, excerpt, body, cover_url, created_at, author:profiles(id,username,display_name,avatar_url)";
+
+export async function fetchArticles(limit = 30): Promise<ArticleRow[]> {
+  const { data, error } = await supabase
+    .from("articles")
+    .select(ARTICLE_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as unknown as ArticleRow[];
+}
+
+export async function fetchArticleBySlug(slug: string): Promise<ArticleRow | null> {
+  const { data, error } = await supabase
+    .from("articles")
+    .select(ARTICLE_SELECT)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as ArticleRow) ?? null;
+}
+
+export async function generateUniqueArticleSlug(base: string): Promise<string> {
+  const clean = base
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 60);
+  if (!clean) throw new Error("Título inválido");
+  const { data, error } = await supabase
+    .from("articles")
+    .select("slug")
+    .or(`slug.eq.${clean},slug.like.${clean}-%`);
+  if (error) throw error;
+  const taken = new Set((data ?? []).map((r: { slug: string }) => r.slug));
+  if (!taken.has(clean)) return clean;
+  let n = 1;
+  while (taken.has(`${clean}-${n}`)) n++;
+  return `${clean}-${n}`;
+}
+
 export async function fetchPendingDeletionGroups(userId: string): Promise<GroupRow[]> {
   const { data, error } = await supabase
     .from("groups")
