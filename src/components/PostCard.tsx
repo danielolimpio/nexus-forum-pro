@@ -9,12 +9,23 @@ export function PostCard({ post }: { post: PostRow }) {
       <div className="flex">
         <div className="flex-1 px-5 py-4">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-            <span className="font-medium text-foreground">g/{post.group?.slug ?? "geral"}</span>
+            {post.group?.slug ? (
+              <Link
+                to="/g/$slug"
+                params={{ slug: post.group.slug }}
+                className="font-medium text-foreground hover:text-primary"
+              >
+                g/{post.group.slug}
+              </Link>
+            ) : (
+              <span className="font-medium text-foreground">g/geral</span>
+            )}
             <span>·</span>
             <span>postado por u/{post.author?.username ?? "anon"}</span>
             <span>·</span>
             <span>{timeAgo(post.created_at)}</span>
           </div>
+
 
           <Link
             to="/thread/$id"

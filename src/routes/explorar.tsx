@@ -50,7 +50,8 @@ function Explorar() {
                       {byCat.get(c.value)!.map((g) => (
                         <Link
                           key={g.id}
-                          to="/"
+                          to="/g/$slug"
+                          params={{ slug: g.slug }}
                           className="flex items-center gap-3 rounded-md hairline bg-surface-1 px-3 py-2 text-sm hover:bg-surface-2"
                         >
                           {g.image_url ? (
@@ -64,6 +65,7 @@ function Explorar() {
                           </div>
                         </Link>
                       ))}
+
                     </div>
                   </section>
                 ))}
